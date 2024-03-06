@@ -65,6 +65,7 @@ const Producao: React.FC = ({route, navigation}) => {
   const [finalWeight, setFinalWeight] = useState(0);
 
   const [opcaoMaquina, setOpcaoMaquina] = useState(0);
+  const [opcaoProducao, setOpcaoProducao] = useState(0);
   const [balanceActive, setBalanceActive] = useState(false);
   const [balanceWaitingActive, setBalanceWaitingActive] = useState(false);
   const [showBtnBalance, setShowBtnBalance] = useState(false);
@@ -82,11 +83,14 @@ const Producao: React.FC = ({route, navigation}) => {
   const [iamChecking, setIamChecking] = useState(0);
   const [visibleModalStatusMaquina, setVisibleModalStatusMaquina] =
     useState(false);
+  const [visibleModalStatusProducao, setVisibleModalStatusProducao] =
+    useState(false);
   const [prinData, setPrintData] = useState<PrintProps>({
     printLink: '',
     printList: [],
   });
   const [rollWeightLeft, setRollWeightLeft] = useState(0);
+  const [materiaSelecionada, setMateriaSelecionada] = useState(0);
   const [modalRollLeft, setModalRollLeft] = useState(false);
   const context = useContext(OrderContext);
 
@@ -124,9 +128,12 @@ const Producao: React.FC = ({route, navigation}) => {
   useEffect(() => {
     const {orderData, data} = route.params;
     setOrderData(orderData);
+    console.log({ordsssserData: orderData.maquinaData});
+
     setTurnOffOptions(route.params.turnOffOptions);
 
     setProduct(data);
+
     if (data.rawObjects) {
       let pendingObjects = [];
       let prodObjects = [];
@@ -165,7 +172,7 @@ const Producao: React.FC = ({route, navigation}) => {
 
     const storageWeight = async () => {
       let asyncWeight = await JSON.parse(
-        await AsyncStorage.getItem('@user:weight'),
+        await AsyncStorage.getItem('@user:weightorder' + productionData.id),
       );
       context.setStorageWeight(asyncWeight);
     };
@@ -180,7 +187,7 @@ const Producao: React.FC = ({route, navigation}) => {
 
   const getFloorBoxFromProduct = async data => {
     let asyncWeight = await JSON.parse(
-      await AsyncStorage.getItem('@user:weight'),
+      await AsyncStorage.getItem('@user:weightorder' + productionData.id),
     );
 
     if (data?.weight.boxAlert) {
@@ -232,7 +239,7 @@ const Producao: React.FC = ({route, navigation}) => {
 
     let exists = 0;
     let asyncWeight = await JSON.parse(
-      await AsyncStorage.getItem('@user:weight'),
+      await AsyncStorage.getItem('@user:weightorder' + productionData.id),
     );
 
     asyncWeight += product?.weight?.box_weight;
@@ -265,7 +272,7 @@ const Producao: React.FC = ({route, navigation}) => {
     let timer = JSON.parse(await AsyncStorage.getItem('@user:timer'));
 
     let asyncWeight = await JSON.parse(
-      await AsyncStorage.getItem('@user:weight'),
+      await AsyncStorage.getItem('@user:weightorder' + productionData.id),
     );
     let boolSavedWeight = await JSON.parse(
       await AsyncStorage.getItem('@user:afterSaveWeight'),
@@ -463,12 +470,11 @@ const Producao: React.FC = ({route, navigation}) => {
       [
         {
           text: 'Não',
-          onPress: () => {
-            confirmEndMaterial(material);
-          },
+          style: 'cancel',
+          onPress: () => {},
         },
         {
-          text: 'Sim',
+          text: 'INDICAR KG SOBRA',
           onPress: async () => {
             setMaterialData(material.id);
             setModalRollLeft(true);
@@ -481,18 +487,23 @@ const Producao: React.FC = ({route, navigation}) => {
   const confirmEndMaterial = (material: ObjectSubProduct) => {
     Alert.alert(
       'Finalizar a utilização da matéria prima?',
-      '',
+      '*************** TARUGO ***************',
       [
         {
-          text: 'Cancel',
-          onPress: () => {},
+          text: 'NÃO',
+          onPress: () => {
+            confirmDoneMaterial(material);
+          },
           style: 'cancel',
         },
         {
-          text: 'OK',
+          text: 'INDICAR KG TARUGO',
           onPress: async () => {
-            setModalTarugoWeight(true);
-            setMaterialData(material.id);
+            setTarugoWeight(String(weight));
+            setTimeout(() => {
+              setModalTarugoWeight(true);
+              setMaterialData(material.id);
+            }, 100);
           },
         },
       ],
@@ -665,7 +676,14 @@ const Producao: React.FC = ({route, navigation}) => {
     let res = JSON.parse(await AsyncStorage.getItem('@user:timer'));
     clearInterval(res);
   };
-
+  const selectMateria = (id: number) => {
+    if (productionData.status_maquina == 1) {
+      setMateriaSelecionada(id);
+      setTimeout(() => {
+        setVisible(true);
+      }, 100);
+    }
+  };
   const getVolume = (arrProduct: Array<BoxProps>) => {
     let totalParse = arrProduct.map(product => {
       if (product != null) {
@@ -681,7 +699,7 @@ const Producao: React.FC = ({route, navigation}) => {
   // const closeBox = async () => {
   //   if (weight >= 0.01) {
   //     let asyncWeight = await JSON.parse(
-  //       await AsyncStorage.getItem('@user:weight'),
+  //       await AsyncStorage.getItem('@user:weightorder'+productionData.id),
   //     );
   //     if (asyncWeight) {
   //       cancelInterval();
@@ -710,11 +728,11 @@ const Producao: React.FC = ({route, navigation}) => {
     setBalanceWaitingActive(true);
     if (weight >= 0.001) {
       let asyncWeight = await JSON.parse(
-        await AsyncStorage.getItem('@user:weight'),
+        await AsyncStorage.getItem('@user:weightorder' + productionData.id),
       );
       if (asyncWeight) {
         await AsyncStorage.setItem(
-          '@user:weight',
+          '@user:weightorder' + productionData.id,
           JSON.stringify(Number(weight) + Number(asyncWeight)),
         );
         context.setStorageWeight(Number(weight) + Number(asyncWeight));
@@ -727,7 +745,7 @@ const Producao: React.FC = ({route, navigation}) => {
           JSON.stringify(true),
         );
         await AsyncStorage.setItem(
-          '@user:weight',
+          '@user:weightorder' + productionData.id,
           JSON.stringify(Number(weight)),
         );
         context.setStorageWeight(Number(weight));
@@ -741,7 +759,10 @@ const Producao: React.FC = ({route, navigation}) => {
   };
 
   const clearStorageWeight = async () => {
-    await AsyncStorage.setItem('@user:weight', JSON.stringify(Number(0)));
+    await AsyncStorage.setItem(
+      '@user:weightorder' + productionData.id,
+      JSON.stringify(Number(0)),
+    );
     context.setStorageWeight(0);
   };
   const statusMaquina = async () => {
@@ -752,7 +773,14 @@ const Producao: React.FC = ({route, navigation}) => {
       // setWeight('0,800');
     }, 100);
   };
+  const statusProducao = async () => {
+    setTimeout(() => {
+      setVisibleModalStatusProducao(true);
+      setOpcaoProducao(1);
 
+      // setWeight('0,800');
+    }, 100);
+  };
   const initBalance = async () => {
     setBalanceActive(true);
     setShowBtnBalance(false);
@@ -815,11 +843,45 @@ const Producao: React.FC = ({route, navigation}) => {
       let newProd = {
         ...productionData,
         status_maquina: statusMaquina,
+        status_producao:
+          resStatusMaquina.data.productionOrderData.status_producao,
+        motivo_status_producao:
+          resStatusMaquina.data.productionOrderData.motivo_status_producao,
         motivo_status_maquina: resStatusMaquina.data.motivo,
       };
       setOrderData(newProd);
       route.params.changeOrderData(newProd);
       setVisibleModalStatusMaquina(false);
+    }
+  };
+  const turnProducao = async (statusProducao: int) => {
+    let asyncToken: string | null = await AsyncStorage.getItem('@user:token');
+    let token = JSON.parse(asyncToken);
+
+    const resStatusProducao = await Apis.apiPlugin.post(
+      `${token}/production_orders/ControlStatusProduction/ControlStatusProductionApi/producaoStatusControl`,
+      {
+        orderId: productionData.id,
+        reasonId: opcaoProducao,
+        statusProducao: statusProducao,
+      },
+    );
+
+    console.log({respostaPRINCIAPL: resStatusProducao.data});
+
+    if (resStatusProducao.data.status == 'ok') {
+      let newProd = {
+        ...productionData,
+        status_producao: statusProducao,
+        status_maquina:
+          resStatusProducao.data.productionOrderData.status_maquina,
+        motivo_status_maquina:
+          resStatusProducao.data.productionOrderData.motivo_status_maquina,
+        motivo_status_producao: resStatusProducao.data.motivo,
+      };
+      setOrderData(newProd);
+      route.params.changeOrderData(newProd);
+      setVisibleModalStatusProducao(false);
     }
   };
   const handleRePrint = async (id: number) => {
@@ -860,9 +922,15 @@ const Producao: React.FC = ({route, navigation}) => {
                   <Card>
                     <View>
                       <OrderNumber>
-                        ordem #{product?.order_id.toString()}
+                        Ordem #{product?.order_id.toString()}
                       </OrderNumber>
                       <OrderTitle>{product?.obj_description}</OrderTitle>
+                      <ProductStatusTab>
+                        <ProductStatusText
+                          style={{fontSize: 15, color: '#000'}}>
+                          {productionData?.maquinaData?.descricao}
+                        </ProductStatusText>
+                      </ProductStatusTab>
                     </View>
 
                     {/* <View>
@@ -935,8 +1003,9 @@ const Producao: React.FC = ({route, navigation}) => {
                               status={item.status_production}
                               title={item.obj_description}
                               confirm={() =>
-                                item.status_production == 'production' &&
-                                confirmDoneMaterial(item)
+                                item.status_production == 'production'
+                                  ? confirmEndMaterial(item)
+                                  : selectMateria(item.id)
                               }
                             />
                           )}
@@ -1091,7 +1160,11 @@ const Producao: React.FC = ({route, navigation}) => {
                         <Card style={{marginVertical: 16}}>
                           <ButtonDefault
                             text="Indicar Matéria"
-                            onPress={() => setVisible(true)}
+                            onPress={() =>
+                              productionData.status_maquina == 1
+                                ? setVisible(true)
+                                : {}
+                            }
                           />
                         </Card>
                       )
@@ -1100,7 +1173,11 @@ const Producao: React.FC = ({route, navigation}) => {
                         <Card style={{width: '100%', marginTop: 8}}>
                           <ButtonDefault
                             text="Ativar balança"
-                            onPress={() => initBalance()}
+                            onPress={() =>
+                              productionData.status_maquina == 1
+                                ? initBalance()
+                                : {}
+                            }
                           />
                         </Card>
                       )}
@@ -1136,29 +1213,19 @@ const Producao: React.FC = ({route, navigation}) => {
             <Top>
               <TopLeftContent
                 style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-                <Card style={{width: '48%'}}>
+                <Card style={{width: '58%'}}>
                   <RowWrapper>
                     <View>
                       <OrderNumber>
                         ordem #{product?.order_id.toString()}
                       </OrderNumber>
                       <OrderTitle>{product?.obj_description}</OrderTitle>
-                      {productionData && productionData.status_maquina == 1 ? (
-                        <ContainerStatusMaquina onPress={() => statusMaquina()}>
-                          <BtnText>Maquina Ligada</BtnText>
-                        </ContainerStatusMaquina>
-                      ) : (
-                        <ContainerStatusMaquina
-                          style={{backgroundColor: '#c33'}}
-                          onPress={() => statusMaquina()}>
-                          <BtnText style={{color: '#fff'}}>
-                            Maquina Desligada{' '}
-                            {productionData.motivo_status_maquina
-                              ? '- ' + productionData.motivo_status_maquina
-                              : ''}
-                          </BtnText>
-                        </ContainerStatusMaquina>
-                      )}
+                      <ProductStatusTab>
+                        <ProductStatusText
+                          style={{fontSize: 15, color: '#000'}}>
+                          {productionData?.maquinaData?.descricao}
+                        </ProductStatusText>
+                      </ProductStatusTab>
                     </View>
 
                     <RowLabels>
@@ -1170,24 +1237,72 @@ const Producao: React.FC = ({route, navigation}) => {
                   </RowWrapper>
                 </Card>
 
-                <View style={{width: '48%'}}>
-                  <CardTotal style={{backgroundColor: '#069'}}>
-                    <View>
-                      <CardTotalText>Ordem</CardTotalText>
-                      <CardTotalText>Produção</CardTotalText>
-                    </View>
-                    <View style={{justifyContent: 'flex-end'}}>
-                      <CardSmallHeight>
-                        {product?.obj_quantity} vol
-                      </CardSmallHeight>
-                      <CardSmallHeight>
-                        {product?.obj_quantity /
-                          (product?.weight.box_weight /
-                            product?.weight.box_unit_weight)}{' '}
-                        CAIXAS
-                      </CardSmallHeight>
-                    </View>
-                  </CardTotal>
+                <View style={{width: '38%'}}>
+                  {productionData && productionData.status_maquina == 1 ? (
+                    <ContainerStatusMaquina
+                      style={{
+                        height: 50,
+                        marginBottom: 10,
+                        alignContent: 'center',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingVertical: 0,
+                      }}
+                      onPress={() => statusMaquina()}>
+                      <BtnText>Maquina Ligada</BtnText>
+                    </ContainerStatusMaquina>
+                  ) : (
+                    <ContainerStatusMaquina
+                      style={{
+                        backgroundColor: '#c33',
+                        marginBottom: 10,
+                        height: 50,
+                        alignContent: 'center',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingVertical: 0,
+                      }}
+                      onPress={() => statusMaquina()}>
+                      <BtnText style={{color: '#fff'}}>
+                        Maquina Desligada{' '}
+                        {productionData.motivo_status_maquina
+                          ? '- ' + productionData.motivo_status_maquina
+                          : ''}
+                      </BtnText>
+                    </ContainerStatusMaquina>
+                  )}
+
+                  {productionData && productionData.status_producao == 1 ? (
+                    <ContainerStatusMaquina
+                      style={{
+                        height: 50,
+                        alignContent: 'center',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingVertical: 0,
+                      }}
+                      onPress={() => statusProducao()}>
+                      <BtnText>Produção Ativa</BtnText>
+                    </ContainerStatusMaquina>
+                  ) : (
+                    <ContainerStatusMaquina
+                      style={{
+                        backgroundColor: '#c33',
+                        height: 50,
+                        alignContent: 'center',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingVertical: 0,
+                      }}
+                      onPress={() => statusProducao()}>
+                      <BtnText style={{color: '#fff'}}>
+                        Produção desativada{' '}
+                        {productionData.motivo_status_producao
+                          ? '- ' + productionData.motivo_status_producao
+                          : ''}
+                      </BtnText>
+                    </ContainerStatusMaquina>
+                  )}
                 </View>
               </TopLeftContent>
               <TopRightContent>
@@ -1215,7 +1330,11 @@ const Producao: React.FC = ({route, navigation}) => {
                   <Card style={{marginVertical: 16}}>
                     <ButtonDefault
                       text="Indicar Matéria"
-                      onPress={() => setVisible(true)}
+                      onPress={() =>
+                        productionData.status_maquina == 1
+                          ? setVisible(true)
+                          : {}
+                      }
                     />
                   </Card>
                 ) : (
@@ -1224,7 +1343,11 @@ const Producao: React.FC = ({route, navigation}) => {
                     <Card style={{width: '100%', marginTop: 8}}>
                       <ButtonDefault
                         text="Ativar balança"
-                        onPress={() => initBalance()}
+                        onPress={() =>
+                          productionData.status_maquina == 1
+                            ? initBalance()
+                            : {}
+                        }
                       />
                     </Card>
                   )
@@ -1277,8 +1400,9 @@ const Producao: React.FC = ({route, navigation}) => {
                             }
                             title={item.obj_description}
                             confirm={() =>
-                              item.status_production == 'production' &&
-                              confirmDoneMaterial(item)
+                              item.status_production == 'production'
+                                ? confirmEndMaterial(item)
+                                : selectMateria(item.id)
                             }
                           />
                         )}
@@ -1491,60 +1615,60 @@ const Producao: React.FC = ({route, navigation}) => {
             {/* {verifyBoxFloor() && <FloatImage source={assets.boxAnimation} />} */}
           </Content>
         )}
-
-        <ModalDefault
-          visible={modalTarugoWeight}
-          change={() => setModalTarugoWeight(false)}
-          children={
-            <ContainerTab
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: 10,
-                padding: 20,
-              }}>
-              <Text>Peso do Tarugo</Text>
-              <Text style={{fontSize: 13}}>Finalizando matéria prima</Text>
-              <InputArea>
-                <InputLabel>Peso em KG</InputLabel>
-                <InputText
-                  keyboardType="phone-pad"
-                  value={tarugoWeight}
-                  onChangeText={weight => setTarugoWeight(weight)}
-                  placeholder="Digite aqui.."
-                />
-              </InputArea>
-              <RowBtns>
-                <BtnWrapper
-                  style={{
-                    marginLeft: Dimensions.get('screen').width < 520 ? 5 : 0,
-                  }}>
-                  <ButtonWithBorder
-                    text="Cancelar"
-                    onPress={() => cancelTarugoWeight()}
+        {modalTarugoWeight == true && (
+          <ModalDefault
+            visible={modalTarugoWeight}
+            change={() => setModalTarugoWeight(false)}
+            children={
+              <ContainerTab
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: 10,
+                  padding: 20,
+                }}>
+                <Text>Peso do Tarugo</Text>
+                <Text style={{fontSize: 13}}>Finalizando matéria prima</Text>
+                <InputArea>
+                  <InputLabel>Peso em KG</InputLabel>
+                  <InputText
+                    keyboardType="phone-pad"
+                    value={String(tarugoWeight)}
+                    onChangeText={w => setTarugoWeight(w)}
+                    placeholder="Digite aqui.."
                   />
-                </BtnWrapper>
-
-                <BtnWrapper>
-                  {loading ? (
-                    <ModalIndicator />
-                  ) : (
-                    <ButtonDefault
-                      text="Finalizar"
-                      onPress={() => {
-                        if (tarugoWeight == '') {
-                          alert('campo vazio');
-                        } else {
-                          saveTarugoWeight(Number(tarugoWeight));
-                        }
-                      }}
+                </InputArea>
+                <RowBtns>
+                  <BtnWrapper
+                    style={{
+                      marginLeft: Dimensions.get('screen').width < 520 ? 5 : 0,
+                    }}>
+                    <ButtonWithBorder
+                      text="Cancelar"
+                      onPress={() => cancelTarugoWeight()}
                     />
-                  )}
-                </BtnWrapper>
-              </RowBtns>
-            </ContainerTab>
-          }
-        />
+                  </BtnWrapper>
 
+                  <BtnWrapper>
+                    {loading ? (
+                      <ModalIndicator />
+                    ) : (
+                      <ButtonDefault
+                        text="Finalizar"
+                        onPress={() => {
+                          if (tarugoWeight == '') {
+                            alert('campo vazio');
+                          } else {
+                            saveTarugoWeight(Number(tarugoWeight));
+                          }
+                        }}
+                      />
+                    )}
+                  </BtnWrapper>
+                </RowBtns>
+              </ContainerTab>
+            }
+          />
+        )}
         <ModalDefault
           visible={modalRollLeft}
           change={() => setModalRollLeft(false)}
@@ -1604,13 +1728,15 @@ const Producao: React.FC = ({route, navigation}) => {
           change={() => setVisibleModalBluetooth(false)}
           loading={loading}
         />
-
-        <ModalIndicateMaterial
-          confirm={code => setNewMaterialToProduct(code)}
-          visible={visible}
-          change={() => setVisible(false)}
-          loading={loading}
-        />
+        {visible && (
+          <ModalIndicateMaterial
+            confirm={code => setNewMaterialToProduct(code)}
+            visible={visible}
+            materiaSelecionada={Number(materiaSelecionada)}
+            change={() => setVisible(false)}
+            loading={loading}
+          />
+        )}
 
         <ModalBoxFinished
           change={() => setVisible(false)}
@@ -1646,9 +1772,9 @@ const Producao: React.FC = ({route, navigation}) => {
                   <Text style={{fontSize: 15}}>
                     Tem certeza que deseja desligar a maquina?
                   </Text>
-                  {turnOffOptions && turnOffOptions.length >= 1 && (
+                  {turnOffOptions && turnOffOptions.maquina.length >= 1 && (
                     <List>
-                      {turnOffOptions.map(d => (
+                      {turnOffOptions.maquina.map(d => (
                         <BotaoList
                           active={opcaoMaquina == d.id}
                           onPress={() => setOpcaoMaquina(d.id)}>
@@ -1658,7 +1784,7 @@ const Producao: React.FC = ({route, navigation}) => {
                     </List>
                   )}
                   <ContainerStatusMaquina
-                    style={{backgroundColor: '#c33'}}
+                    style={{backgroundColor: '#c33', paddingVertical: 20}}
                     onPress={() => turnMaquina(0)}>
                     <BtnText
                       style={{
@@ -1676,9 +1802,68 @@ const Producao: React.FC = ({route, navigation}) => {
                     Tem certeza que deseja ligar a maquina?
                   </Text>
 
-                  <ContainerStatusMaquina onPress={() => turnMaquina(1)}>
+                  <ContainerStatusMaquina
+                    style={{paddingVertical: 20}}
+                    onPress={() => turnMaquina(1)}>
                     <BtnText style={{fontSize: 20, justifyContent: 'center'}}>
                       Sim! LIGAR a Maquina
+                    </BtnText>
+                  </ContainerStatusMaquina>
+                </>
+              )}
+            </ContainerTab>
+          }
+        />
+        <ModalDefault
+          change={() => setVisibleModalStatusProducao(false)}
+          visible={visibleModalStatusProducao}
+          children={
+            <ContainerTab
+              style={{
+                backgroundColor: '#efb3b3',
+                borderRadius: 10,
+                padding: 20,
+              }}>
+              {productionData && productionData.status_producao == 1 ? (
+                <>
+                  <Text style={{fontSize: 15}}>
+                    Tem certeza que deseja desativar a produção?
+                  </Text>
+                  {turnOffOptions && turnOffOptions.producao.length >= 1 && (
+                    <List>
+                      {turnOffOptions.producao.map(d => (
+                        <BotaoList
+                          active={opcaoProducao == d.id}
+                          onPress={() => setOpcaoProducao(d.id)}>
+                          <Text style={{fontSize: 16}}>{d.description}</Text>
+                        </BotaoList>
+                      ))}
+                    </List>
+                  )}
+                  <ContainerStatusMaquina
+                    style={{backgroundColor: '#c33', paddingVertical: 20}}
+                    onPress={() => turnProducao(0)}>
+                    <BtnText
+                      style={{
+                        fontSize: 20,
+                        justifyContent: 'center',
+                        color: '#fff',
+                      }}>
+                      Sim! DESATIVAR a Produção
+                    </BtnText>
+                  </ContainerStatusMaquina>
+                </>
+              ) : (
+                <>
+                  <Text style={{fontSize: 15}}>
+                    Tem certeza que deseja ATIVAR a Produção?
+                  </Text>
+
+                  <ContainerStatusMaquina
+                    style={{paddingVertical: 20}}
+                    onPress={() => turnProducao(1)}>
+                    <BtnText style={{fontSize: 20, justifyContent: 'center'}}>
+                      Sim! ATIVAR a Produção
                     </BtnText>
                   </ContainerStatusMaquina>
                 </>
@@ -1813,7 +1998,21 @@ const Main = styled.View`
   justify-content: space-between;
   padding: 16px;
 `;
+const ProductStatusTab = styled.View`
+  background-color: ${({theme, status}) =>
+    status == 'waiting' ? theme.green : theme.lightBlue};
+  justify-content: center;
+  align-items: center;
+  border-radius: 15px;
+  padding: 5px;
+  margin: 8px 0;
+`;
 
+const ProductStatusText = styled.Text`
+  color: ${({theme}) => theme.dark};
+  font-family: ${({theme}) => theme.fontSecondary};
+  font-size: 10px;
+`;
 const MainLeftContent = styled.View`
   width: 49%;
 `;
@@ -1949,7 +2148,6 @@ const BotaoList = styled.TouchableOpacity`
   border-radius: 10px;
 `;
 const ContainerStatusMaquina = styled.TouchableOpacity`
-  padding: 10px;
   background: #48f49e;
   margin-top: 5px;
   border-radius: 10px;
@@ -1966,7 +2164,7 @@ const CardStorageBtn = styled.TouchableOpacity`
 const BtnText = styled.Text`
   font-weight: bold;
   text-align: center;
-  font-size: 12px;
+  font-size: 16px;
   color: #3f3f3e;
 `;
 const CardStorageBtnText = styled.Text`

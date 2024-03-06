@@ -17,6 +17,7 @@ interface CardSelectionOrderProps {
   total: string;
   volume: string;
   blocked?: boolean;
+  maquinaData: object;
 }
 
 const CardSelectionOrder: React.FC<CardSelectionOrderProps> = ({
@@ -27,6 +28,7 @@ const CardSelectionOrder: React.FC<CardSelectionOrderProps> = ({
   total,
   volume,
   blocked,
+  maquinaData,
 }) => {
   const getStatusString = (status: string) => {
     if (status == 'production') {
@@ -46,6 +48,11 @@ const CardSelectionOrder: React.FC<CardSelectionOrderProps> = ({
       onPress={() => onClick()}>
       <ValueNote>N: {number}</ValueNote>
       <Divide />
+      <ProductStatusTab status={status}>
+        <ProductStatusText style={{fontSize: 15}}>
+          {maquinaData.descricao}
+        </ProductStatusText>
+      </ProductStatusTab>
       <LabelNote>Data</LabelNote>
       <LabelValue>{date.split('-').reverse().join('-')}</LabelValue>
       <LabelNote>Total de itens</LabelNote>
@@ -91,7 +98,7 @@ type ContainerProps = {
   blocked: boolean;
 };
 const Container = styled.TouchableOpacity<ContainerProps>`
-  opacity: ${(props) => (props.blocked ? 0.5 : 1)};
+  opacity: ${props => (props.blocked ? 0.5 : 1)};
   background-color: ${({theme}) => theme.cardBackGround};
   border-radius: 12px;
   margin: 12px;

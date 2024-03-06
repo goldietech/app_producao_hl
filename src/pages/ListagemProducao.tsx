@@ -29,10 +29,9 @@ const ListagemProducao: React.FC = ({navigation}) => {
     let token = JSON.parse(asyncToken);
     try {
       const resOrders = await Apis.api.get(
-        `${token}/production_orders/ProductionOrderApi/read?requiredFields=*&requiredFieldsObject=*&objectRequiredFields=*&ordersObject=true&turnOffOptions=true&status=waiting,production
+        `${token}/production_orders/ProductionOrderApi/read?requiredFields=*&maquinaData=1&requiredFieldsObject=*&objectRequiredFields=*&ordersObject=true&turnOffOptions=true&status=waiting,production
         `,
       );
-
       setData(resOrders.data.objData);
       setTurnOffOptions(resOrders.data.turnOffOptions);
       context.populateOrders(resOrders.data.objData);
@@ -97,6 +96,7 @@ const ListagemProducao: React.FC = ({navigation}) => {
                   })
                 }
                 number={item.code}
+                maquinaData={item.maquinaData}
                 date={item.start_date}
                 volume={`${getVolume(item.OrdersObject).toString()} kg`}
                 total={item.OrdersObject.length.toString()}

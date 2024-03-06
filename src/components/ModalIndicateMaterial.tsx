@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Dimensions, ActivityIndicator} from 'react-native';
 import {ModalDefault} from './ModalDefault';
 import styled from 'styled-components/native';
@@ -10,15 +10,24 @@ interface ModalIndicateMaterialProps {
   change: (visible?: boolean) => void;
   confirm: (code: number) => void;
   loading: boolean;
+  materiaSelecionada: number;
 }
 
 const ModalIndicateMaterial: React.FC<ModalIndicateMaterialProps> = ({
   confirm,
   visible,
+  materiaSelecionada,
   change,
   loading,
 }) => {
   const [code, setCode] = useState('');
+  useEffect(() => {
+    if (materiaSelecionada) {
+      setCode(materiaSelecionada);
+    }
+    return;
+  }, []);
+
   return (
     <ModalDefault
       visible={visible}
@@ -30,8 +39,8 @@ const ModalIndicateMaterial: React.FC<ModalIndicateMaterialProps> = ({
             <InputLabel>Código</InputLabel>
             <InputText
               keyboardType="phone-pad"
-              value={code}
-              onChangeText={(code) => setCode(code)}
+              value={String(code)}
+              onChangeText={code => setCode(code)}
               placeholder="Digite aqui.."
             />
           </InputArea>
@@ -67,8 +76,8 @@ const ModalIndicateMaterial: React.FC<ModalIndicateMaterialProps> = ({
 };
 
 const Container = styled.View`
-  ${Dimensions.get('screen').width < 520 && `flex: 1`};
-  ${Dimensions.get('screen').width > 520 && `width: 600px`};
+  ${Dimensions.get('screen').width < 520 && 'flex: 1'};
+  ${Dimensions.get('screen').width > 520 && 'width: 600px'};
   background-color: ${({theme}) => theme.cardBackGround};
   border-radius: 20px;
   padding: ${Dimensions.get('screen').width < 520 ? '16px 8px' : '16px 56px'};
@@ -95,7 +104,7 @@ const InputLabel = styled.Text`
 type InputTextProps = {
   myTheme?: string;
 };
-const InputText = styled.TextInput.attrs<InputTextProps>((props) => ({
+const InputText = styled.TextInput.attrs<InputTextProps>(props => ({
   placeholderTextColor: props.theme.gray,
 }))<InputTextProps>`
   background-color: ${({theme, myTheme}) =>
@@ -119,7 +128,7 @@ const BtnWrapper = styled.View`
   margin: ${Dimensions.get('screen').width < 520 ? '0 18px' : '0 16px'};
 `;
 
-const ModalIndicator = styled(ActivityIndicator).attrs((props) => ({
+const ModalIndicator = styled(ActivityIndicator).attrs(props => ({
   color: props.theme.primary,
   size: 30,
 }))`

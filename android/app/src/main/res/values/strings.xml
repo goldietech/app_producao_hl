@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">producao</string>
+    <string name="app_name">ProdFabrica</string>
     <string name="appCenterCrashes_whenToSendCrashes" moduleConfig="true" translatable="false">DO_NOT_ASK_JAVASCRIPT</string>
 <string name="appCenterAnalytics_whenToEnableAnalytics" moduleConfig="true" translatable="false">ALWAYS_SEND</string>
  <string moduleConfig="true" name="CodePushDeploymentKey">OrQOO3VuJWK7frBpi6GnjT0mvyPMwhFLF6_B-</string>

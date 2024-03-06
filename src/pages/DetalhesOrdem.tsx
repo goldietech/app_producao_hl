@@ -243,6 +243,11 @@ const DetalhesOrdem: React.FC = ({route, navigation}) => {
         <Card>
           <OrderNumber>ordem #{order?.code}</OrderNumber>
           <OrderTitle>ID: {order?.id}</OrderTitle>
+          <ProductStatusTab>
+            <ProductStatusText style={{fontSize: 15}}>
+              {order.maquinaData.descricao}
+            </ProductStatusText>
+          </ProductStatusTab>
           <DateRow>
             <DateWrapper>
               <Label>Criado em</Label>
@@ -505,7 +510,21 @@ const Value = styled.Text`
   font-family: ${({theme}) => theme.fontSecondary};
   margin-bottom: 10px;
 `;
+const ProductStatusTab = styled.View<{status: string}>`
+  background-color: ${({theme, status}) =>
+    status == 'waiting' ? theme.green : theme.lightBlue};
+  justify-content: center;
+  align-items: center;
+  border-radius: 15px;
+  padding: 5px;
+  margin: 8px 0;
+`;
 
+const ProductStatusText = styled.Text`
+  color: ${({theme}) => theme.dark};
+  font-family: ${({theme}) => theme.fontSecondary};
+  font-size: 10px;
+`;
 const BarStatus = styled.View`
   flex-direction: row;
   align-items: center;
