@@ -55,10 +55,7 @@ const CardSelectionOrder: React.FC<CardSelectionOrderProps> = ({
       </ProductStatusTab>
       <LabelNote>Data</LabelNote>
       <LabelValue>{date.split('-').reverse().join('-')}</LabelValue>
-      <LabelNote>Total de itens</LabelNote>
-      <LabelValue>{total}</LabelValue>
-      <LabelNote>Volume</LabelNote>
-      <LabelValue>{volume}</LabelValue>
+
       {Dimensions.get('screen').width < 520 ? (
         <DotsLine style={{marginLeft: 5}}>
           <Dots />

@@ -5,6 +5,7 @@ import {
   FlatList,
   ScrollView,
   Dimensions,
+  Alert,
 } from 'react-native';
 import {ModalDefault} from '../components/ModalDefault';
 import {BackGroundComponent} from '../components/BackGroundComponent';
@@ -34,6 +35,7 @@ const ConferenciaNota: React.FC = ({navigation, route}) => {
     setData(myParam);
   }, []);
   const [text, setText] = useState('');
+  const [textTarugo, setTextTarugo] = useState('');
   const [active, setActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingFinish, setLoadingFinish] = useState(false);
@@ -44,7 +46,27 @@ const ConferenciaNota: React.FC = ({navigation, route}) => {
   });
   let refScroll = useRef();
   const context = useContext(OrderContext);
-
+  const confirmHandleFinisheObj = (id: number) => {
+    Alert.alert(
+      'Tem certeza que deseja finalizar?',
+      '',
+      [
+        {
+          text: 'Não',
+          style: 'cancel',
+          onPress: () => {},
+        },
+        {
+          text: 'SIM, TENHO CERTEZA',
+          onPress: async () => {
+            handleFinisheObj(id);
+          },
+        },
+      ],
+      {cancelable: true},
+    );
+    return;
+  };
   const handleAddProduct = async () => {
     setLoading(true);
 
@@ -56,6 +78,7 @@ const ConferenciaNota: React.FC = ({navigation, route}) => {
         `,
         {
           weigth: text.toString(),
+          weigthTarugo: textTarugo.toString(),
           delivery_obj_id: data?.id,
         },
       );
@@ -74,6 +97,7 @@ const ConferenciaNota: React.FC = ({navigation, route}) => {
           printList: [],
         });
         setText('');
+        setTextTarugo('');
       }, 1000);
       setLoading(false);
     } catch (error) {
@@ -99,6 +123,7 @@ const ConferenciaNota: React.FC = ({navigation, route}) => {
 
       context.setNoteProductStatus(id, 'finished');
       setText('');
+      setTextTarugo('');
       setTimeout(() => {
         navigation.goBack();
       }, 500);
@@ -175,7 +200,7 @@ const ConferenciaNota: React.FC = ({navigation, route}) => {
                 <DividerHorizontal />
 
                 <HeightValueToConfirm>
-                  {data?.total} kg a conferir
+                  {data?.quantity} kg a conferir
                 </HeightValueToConfirm>
               </InfoProduct>
             </InfoArea>
@@ -185,39 +210,50 @@ const ConferenciaNota: React.FC = ({navigation, route}) => {
             </DividerArea>
 
             <ListArea>
-              <InputArea>
-                <InputLabel>Peso unitário</InputLabel>
-                <InputText
-                  value={text}
-                  onBlur={() => {
-                    setActive(false);
-                  }}
-                  onFocus={() => {
-                    setActive(true);
-                    // setTimeout(() => {
-                    //   refScroll.current.scrollToEnd();
-                    // }, 200);
-                  }}
-                  onChangeText={text => setText(text)}
-                  placeholder="digite o peso"
-                  keyboardType="number-pad"
-                />
-              </InputArea>
-
-              {active ? (
-                <>
-                  <ButtonDefault
-                    text="Adicionar"
-                    onPress={() => {
-                      if (text == '') {
-                        alert('Campo vazio, digite um peso!');
-                      } else {
-                        handleAddProduct();
-                      }
+              <View
+                style={{
+                  flex: 1,
+                  flexDirection: 'row',
+                }}>
+                <InputArea style={{width: '49%'}}>
+                  <InputLabel>Bruto</InputLabel>
+                  <InputText
+                    value={text}
+                    onBlur={() => {
+                      setActive(false);
                     }}
+                    onFocus={() => {
+                      setActive(true);
+                      // setTimeout(() => {
+                      //   refScroll.current.scrollToEnd();
+                      // }, 200);
+                    }}
+                    onChangeText={text => setText(text)}
+                    placeholder="digite o peso"
+                    keyboardType="number-pad"
                   />
-                  <LoadingIndicator />
-                </>
+                </InputArea>
+                <InputArea style={{width: '49%'}}>
+                  <InputLabel>Tarugo</InputLabel>
+                  <InputText
+                    value={textTarugo}
+                    onBlur={() => {
+                      setActive(false);
+                    }}
+                    onFocus={() => {
+                      setActive(true);
+                      // setTimeout(() => {
+                      //   refScroll.current.scrollToEnd();
+                      // }, 200);
+                    }}
+                    onChangeText={textTarugo => setTextTarugo(textTarugo)}
+                    placeholder="digite o peso"
+                    keyboardType="number-pad"
+                  />
+                </InputArea>
+              </View>
+              {active ? (
+                <></>
               ) : (
                 <>
                   <BtnConfirmArea>
@@ -237,7 +273,7 @@ const ConferenciaNota: React.FC = ({navigation, route}) => {
                     )}
                   </BtnConfirmArea>
                   <FlatList
-                    style={{height: Dimensions.get('screen').height - 480}}
+                    style={{height: Dimensions.get('screen').height - 600}}
                     data={data.stockData}
                     renderItem={({item, index}) => (
                       <ItemList
@@ -245,6 +281,7 @@ const ConferenciaNota: React.FC = ({navigation, route}) => {
                         numberInfo={item.number}
                         text={item.id.toString()}
                         productWeight={item.total_weight}
+                        tarugoWeight={item.tarugo_compra_peso}
                         onPress={() => {}}
                       />
                     )}
@@ -265,7 +302,8 @@ const ConferenciaNota: React.FC = ({navigation, route}) => {
                     ) : (
                       <ButtonDefault
                         text="Finalizar"
-                        onPress={() => handleFinisheObj(data?.id)}
+                        styleB={{backgroundColor: '#0c3'}}
+                        onPress={() => confirmHandleFinisheObj(data?.id)}
                       />
                     ))}
                 </>

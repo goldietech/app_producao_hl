@@ -169,29 +169,34 @@ const ModalConferenceTablet: React.FC<ModalConferenceTabletProps> = ({
                 <DividerHorizontal />
 
                 <HeightValueToConfirm>
-                  {itemDetail?.total} kg a conferir
+                  {itemDetail?.quantity} kg a conferir
                 </HeightValueToConfirm>
               </InfoProduct>
 
-              <InputArea>
-                <InputLabel>Peso unitário</InputLabel>
+              <InputArea style={{width: '49%'}}>
+                <InputLabel>Bruto</InputLabel>
                 <InputText
                   value={text}
                   onBlur={() => {
                     setActive(false);
-                  }}
-                  onFocus={() => {
-                    setActive(true),
-                      setTimeout(() => {
-                        refScroll.current.scrollToEnd();
-                      }, 200);
                   }}
                   onChangeText={text => setText(text)}
                   placeholder="digite o peso"
                   keyboardType="number-pad"
                 />
               </InputArea>
-
+              <InputArea style={{width: '49%'}}>
+                <InputLabel>Tarugo</InputLabel>
+                <InputText
+                  value={text}
+                  onBlur={() => {
+                    setActive(false);
+                  }}
+                  onChangeText={text => setText(text)}
+                  placeholder="digite o peso"
+                  keyboardType="number-pad"
+                />
+              </InputArea>
               <BtnConfirmArea>
                 {loading ? (
                   <LoadingIndicator />

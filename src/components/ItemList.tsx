@@ -9,6 +9,7 @@ interface ItemListProps {
   numberInfo?: number;
   onPress: () => void;
   productWeight: string;
+  tarugoWeight: string;
   rePrint: (id: number) => void;
 }
 
@@ -17,6 +18,7 @@ const ItemList: React.FC<ItemListProps> = ({
   numberInfo,
   onPress,
   productWeight,
+  tarugoWeight,
   rePrint,
 }) => {
   return (
@@ -28,7 +30,7 @@ const ItemList: React.FC<ItemListProps> = ({
         </TextPrintWrapper>
       </View>
       <ProductCardListHeigh>
-        {productWeight} kg | {numberInfo}
+        {productWeight} kg | T: {tarugoWeight} kg | {numberInfo}
       </ProductCardListHeigh>
     </ProductCardListContainer>
   );

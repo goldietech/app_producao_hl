@@ -54,7 +54,7 @@ const ProductTablet: React.FC<ProductTabletProp> = ({
   };
 
   const getVolume = (arrProduct: Array<ObjectNoteProductStock>) => {
-    let totalParse = arrProduct.map((product) => {
+    let totalParse = arrProduct.map(product => {
       if (product != null) {
         return Number(product.total_weight);
       }
@@ -97,15 +97,6 @@ const ProductTablet: React.FC<ProductTabletProp> = ({
         </VolumeTag>
         <VolumeQtd>{data.total}</VolumeQtd>
       </VolumeArea>
-      <PriceArea>
-        {hasHeigh ? (
-          <PriceUnit>150kg/800kg</PriceUnit>
-        ) : (
-          <>
-            <PriceTotal>R$ {data.price}</PriceTotal>
-          </>
-        )}
-      </PriceArea>
 
       {status == 'finished' ? (
         <IconChecked icon={faCheckCircle} size={45} />
@@ -192,12 +183,12 @@ const ProductStatusText = styled.Text`
 `;
 
 const VolumeArea = styled.View`
-  width: 12.5%;
+  width: 25.5%;
   padding: 10px 0;
 `;
 
 const VolumeTag = styled.View<TypeHeightProps>`
-  background-color: ${(props) =>
+  background-color: ${props =>
     props.type == 'pct' ? props.theme.darkBlue : props.theme.blue};
   justify-content: center;
   align-items: center;
@@ -255,7 +246,7 @@ const NotChecked = styled.View`
   border: 1px solid #525354;
 `;
 
-export const IconChecked = styled(FontAwesomeIcon).attrs((props) => ({
+export const IconChecked = styled(FontAwesomeIcon).attrs(props => ({
   color: props.theme.green,
 }))`
   align-self: center;

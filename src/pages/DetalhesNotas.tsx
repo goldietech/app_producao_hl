@@ -393,12 +393,8 @@ const DetalhesNotas: React.FC = ({route, navigation}) => {
                     </LabelCategory>
                   </LabelWrapper>
 
-                  <LabelWrapper style={{width: '12%'}}>
+                  <LabelWrapper style={{width: '25%'}}>
                     <LabelCategory>Volume</LabelCategory>
-                  </LabelWrapper>
-
-                  <LabelWrapper style={{width: '13%'}}>
-                    <LabelCategory>Preço</LabelCategory>
                   </LabelWrapper>
 
                   <LabelWrapper style={{width: '15%'}} />

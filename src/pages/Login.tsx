@@ -41,6 +41,8 @@ const Login: React.FC<Props> = ({navigation}) => {
         JSON.stringify(resLogin.data.userData),
       );
       setLoading(false);
+      setUser('');
+      setPassword('');
       navigation.push('Home');
     } catch (error) {
       setLoading(false);

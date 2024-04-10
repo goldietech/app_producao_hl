@@ -24,7 +24,7 @@ const OrderContextComponent: React.FC = ({children}) => {
 
   const [notes, setNotes] = useState<ResponseNote[] | []>([]);
   const [noteProduct, setNoteProduct] = useState<ResponseNoteDetail[] | []>([]);
-  const [, forceUpdate] = useReducer((x) => x + 1, 0);
+  const [, forceUpdate] = useReducer(x => x + 1, 0);
   const [balanceDevice, setBalance] = useState<string>('');
   const [weight, setWeight] = useState<number>(0);
   const [globalInterval, setGlobalInterval] = useState(0);
@@ -47,7 +47,7 @@ const OrderContextComponent: React.FC = ({children}) => {
     populateMaterials: (param: ObjectSubProduct[]) =>
       setProductMaterials(param),
     updateSpecificObjOrder: (param: ObjectProduct) => {
-      objProduct?.map((obj) => {
+      objProduct?.map(obj => {
         if (obj?.id == param?.id) {
           obj = param;
         }
@@ -56,7 +56,7 @@ const OrderContextComponent: React.FC = ({children}) => {
       forceUpdate();
     },
     setOrderObjectStatus: (param: number, status: string) => {
-      objProduct?.map((obj) => {
+      objProduct?.map(obj => {
         if (obj?.id == param) {
           obj.status_production = status;
         }
@@ -65,33 +65,29 @@ const OrderContextComponent: React.FC = ({children}) => {
       forceUpdate();
     },
     changeStatusOrderObjectMaterial: (param: ObjectSubProduct) => {
-      productMaterials?.map((material) => {
+      productMaterials?.map(material => {
         if (material?.id == param.id) {
           material.status_production = param.status_production;
         }
         return material;
       });
 
+      let pendingObjects = [];
+      let prodObjects = [];
+      let doneObjects = [];
+      productMaterials.map(data => {
+        if (data.status_production == 'pending') {
+          pendingObjects = [...pendingObjects, data];
+        } else if (data.status_production == 'production') {
+          prodObjects = [...prodObjects, data];
+        } else if (data.status_production == 'done') {
+          doneObjects = [...doneObjects, data];
+        }
+      });
 
+      let first = [...prodObjects, ...pendingObjects];
+      let newProductions = [...first, ...doneObjects];
 
-        let pendingObjects = [];
-        let prodObjects = [];
-        let doneObjects = [];
-        productMaterials.map((data) => {
-
-          if (data.status_production == 'pending') {
-            pendingObjects = [...pendingObjects, data];
-          } else if (data.status_production == 'production') {
-            prodObjects = [...prodObjects, data];
-          } else if (data.status_production == 'done') {
-            doneObjects = [...doneObjects, data];
-          }
-        })
-    
-        let first = [...prodObjects, ...pendingObjects];
-        let newProductions = [...first, ...doneObjects];
-
-      
       setProductMaterials(newProductions);
       forceUpdate();
     },
@@ -123,7 +119,7 @@ const OrderContextComponent: React.FC = ({children}) => {
     setNewItemInNote: (idNote: number, obj: ObjectNoteProductStock) => {
       noteProduct.map((noteObj: ResponseNoteDetail) => {
         if (noteObj.id == idNote) {
-          noteObj.stockData = [...noteObj.stockData, obj];
+          noteObj.stockData = [obj, ...noteObj.stockData];
         }
         return noteObj;
       });

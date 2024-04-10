@@ -5,6 +5,7 @@ import {BackGroundComponent} from '../components/BackGroundComponent';
 import themes from '../themes';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNRestart from 'react-native-restart';
+import {Apis} from '../services/api';
 
 const Configuration: React.FC = ({navigation}) => {
   const [theme, setTheme] = useState('');
@@ -33,6 +34,14 @@ const Configuration: React.FC = ({navigation}) => {
   };
 
   const clearStorage = async () => {
+    let asyncToken: string | null = await AsyncStorage.getItem('@user:token');
+    let token = JSON.parse(asyncToken);
+    const turnOffAll = await Apis.apiPlugin.post(
+      `${token}/production_orders/ControlStatusProduction/ControlStatusProductionApi/turnOffAll`,
+      {
+        orderId: 1,
+      },
+    );
     AsyncStorage.clear();
     setTimeout(() => {
       navigation.navigate('Login');

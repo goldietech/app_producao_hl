@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import styled from 'styled-components/native';
 import {FontsDefault} from '../styles/fonts';
 import {ModalIndicateMaterial} from '../components/ModalIndicateMaterial';
@@ -23,8 +24,7 @@ import {
   ObjectSubProduct,
 } from '../models/OrderProps';
 
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faTimes} from '@fortawesome/free-solid-svg-icons';
+import {faTimes, faWarning} from '@fortawesome/free-solid-svg-icons';
 import {OrderContext} from '../context/OrderContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Apis} from '../services/api';
@@ -63,7 +63,14 @@ const Producao: React.FC = ({route, navigation}) => {
   const [turnOffOptions, setTurnOffOptions] = useState([]);
   const [weight, setWeight] = useState(0);
   const [finalWeight, setFinalWeight] = useState(0);
-
+  const [userData, setUserData] = useState({});
+  const getUser = async (): Promise<any> => {
+    let user = await AsyncStorage.getItem('@user:user').then(json => {
+      let res: string = JSON.parse(json);
+      return res;
+    });
+    setUserData(user);
+  };
   const [opcaoMaquina, setOpcaoMaquina] = useState(0);
   const [opcaoProducao, setOpcaoProducao] = useState(0);
   const [balanceActive, setBalanceActive] = useState(false);
@@ -76,6 +83,8 @@ const Producao: React.FC = ({route, navigation}) => {
   const [boxFloorNumbers, setBoxFloorNumbers] = useState<number[]>([]);
   const [prevWeightFloor, setPrevWeightFloor] = useState<number>(0);
   const [visibleModalFloor, setVisibleModalFloor] = useState(false);
+  const [visibleModalWarningFloor, setVisibleModalWarningFloor] =
+    useState(false);
   const [modalTarugoWeight, setModalTarugoWeight] = useState(false);
   const [boxLevels, setBoxLevels] = useState([]);
   const [materialData, setMaterialData] = useState(null);
@@ -126,6 +135,7 @@ const Producao: React.FC = ({route, navigation}) => {
   };
 
   useEffect(() => {
+    getUser();
     const {orderData, data} = route.params;
     setOrderData(orderData);
     console.log({ordsssserData: orderData.maquinaData});
@@ -170,13 +180,6 @@ const Producao: React.FC = ({route, navigation}) => {
       setDevices(list);
     };
 
-    const storageWeight = async () => {
-      let asyncWeight = await JSON.parse(
-        await AsyncStorage.getItem('@user:weightorder' + productionData.id),
-      );
-      context.setStorageWeight(asyncWeight);
-    };
-
     // getListSaved();
     init();
     storageWeight();
@@ -184,7 +187,12 @@ const Producao: React.FC = ({route, navigation}) => {
     getFloorBoxFromProduct(data);
     return () => cancelInterval();
   }, []);
-
+  const storageWeight = async () => {
+    let asyncWeight = await JSON.parse(
+      await AsyncStorage.getItem('@user:weightorder' + productionData.id),
+    );
+    context.setStorageWeight(asyncWeight);
+  };
   const getFloorBoxFromProduct = async data => {
     let asyncWeight = await JSON.parse(
       await AsyncStorage.getItem('@user:weightorder' + productionData.id),
@@ -723,6 +731,7 @@ const Producao: React.FC = ({route, navigation}) => {
     cancelInterval();
     // if (visibleModalFloor) {
     setVisibleModalFloor(false);
+    setVisibleModalWarningFloor(true);
     // }
     await AsyncStorage.setItem('@user:afterSaveWeight', JSON.stringify(true));
     setBalanceWaitingActive(true);
@@ -757,7 +766,35 @@ const Producao: React.FC = ({route, navigation}) => {
       alert('Necessário mais peso!');
     }
   };
-
+  const clearStorage = async () => {
+    if (
+      productionData &&
+      (productionData.status_maquina == 1 ||
+        productionData.status_producao == 1)
+    ) {
+      alert('Necessário desligar a maquina e a produção');
+      return;
+    }
+    let asyncToken: string | null = await AsyncStorage.getItem('@user:token');
+    let token = JSON.parse(asyncToken);
+    const turnOffAll = await Apis.apiPlugin.post(
+      `${token}/production_orders/ControlStatusProduction/ControlStatusProductionApi/turnOffAll`,
+      {
+        orderId: 1,
+      },
+    );
+    var pesoSalvoAtual = await JSON.parse(
+      await AsyncStorage.getItem('@user:weightorder' + productionData.id),
+    );
+    AsyncStorage.clear();
+    await AsyncStorage.setItem(
+      '@user:weightorder' + productionData.id,
+      JSON.stringify(Number(weight) + Number(pesoSalvoAtual)),
+    );
+    setTimeout(() => {
+      navigation.navigate('Login');
+    }, 200);
+  };
   const clearStorageWeight = async () => {
     await AsyncStorage.setItem(
       '@user:weightorder' + productionData.id,
@@ -785,6 +822,8 @@ const Producao: React.FC = ({route, navigation}) => {
     setBalanceActive(true);
     setShowBtnBalance(false);
     await getListSaved();
+    storageWeight();
+
     setTimeout(async () => {
       setVisible(false);
 
@@ -848,6 +887,10 @@ const Producao: React.FC = ({route, navigation}) => {
         motivo_status_producao:
           resStatusMaquina.data.productionOrderData.motivo_status_producao,
         motivo_status_maquina: resStatusMaquina.data.motivo,
+        usuario_status_producao:
+          resStatusMaquina.data.productionOrderData.usuario_status_producao,
+        usuario_status_maquina:
+          resStatusMaquina.data.productionOrderData.usuario_status_maquina,
       };
       setOrderData(newProd);
       route.params.changeOrderData(newProd);
@@ -864,6 +907,15 @@ const Producao: React.FC = ({route, navigation}) => {
         orderId: productionData.id,
         reasonId: opcaoProducao,
         statusProducao: statusProducao,
+        status_producao:
+          resStatusProducao.data.productionOrderData.status_producao,
+        motivo_status_producao:
+          resStatusProducao.data.productionOrderData.motivo_status_producao,
+        motivo_status_maquina: resStatusProducao.data.motivo,
+        usuario_status_producao:
+          resStatusProducao.data.productionOrderData.usuario_status_producao,
+        usuario_status_maquina:
+          resStatusProducao.data.productionOrderData.usuario_status_maquina,
       },
     );
 
@@ -953,7 +1005,7 @@ const Producao: React.FC = ({route, navigation}) => {
                           {product?.obj_quantity /
                             (product?.weight.box_weight /
                               product?.weight.box_unit_weight)}{' '}
-                          CAIXAS
+                          FARDOS
                         </CardSmallHeight>
                       </View>
                     </CardTotal>
@@ -996,7 +1048,7 @@ const Producao: React.FC = ({route, navigation}) => {
                           renderItem={({item, index}) => (
                             <ItemListMaterial
                               blocked={!getAllMaterialStatus()}
-                              code={item.id}
+                              code={item.obj_id}
                               handleTarugoRePrint={() =>
                                 handleTarugoRePrint(item.id)
                               }
@@ -1017,12 +1069,7 @@ const Producao: React.FC = ({route, navigation}) => {
 
                   <VolumeCard>
                     <CardTotalText>Totais Fabricados:</CardTotalText>
-                    <RowWrapper>
-                      <ValueWeight>
-                        {'KG: '}
-                        {boxList.length > 0 ? getVolume(boxList) : 0} kg
-                      </ValueWeight>
-                    </RowWrapper>
+
                     <RowWrapper>
                       <ValueWeight>
                         {Number(
@@ -1153,33 +1200,41 @@ const Producao: React.FC = ({route, navigation}) => {
 
                     {/* {balanceActive && weight > 1 && cancelInterval()} */}
                   </CardTotal>
-
+                  <View
+                    style={{
+                      justifyContent: 'right',
+                      flex: 1,
+                      background: '#fff',
+                    }}>
+                    <Titulo>Olá, {userData?.first_name}</Titulo>
+                    <BtnConfirm onPress={() => clearStorage()}>
+                      <BtnConfirmText>SAIR</BtnConfirmText>
+                    </BtnConfirm>
+                  </View>
                   {getAllMaterialStatus()
                     ? !setOrderReady() &&
                       !showBtnBalance && (
-                        <Card style={{marginVertical: 16}}>
+                        <Card style={{width: '100%', marginTop: 8}}>
                           <ButtonDefault
                             text="Indicar Matéria"
-                            onPress={() =>
-                              productionData.status_maquina == 1
-                                ? setVisible(true)
-                                : {}
-                            }
+                            onPress={() => {}}
                           />
                         </Card>
                       )
                     : showBtnBalance &&
                       !setOrderReady() && (
-                        <Card style={{width: '100%', marginTop: 8}}>
-                          <ButtonDefault
-                            text="Ativar balança"
-                            onPress={() =>
-                              productionData.status_maquina == 1
-                                ? initBalance()
-                                : {}
-                            }
-                          />
-                        </Card>
+                        <>
+                          <Card style={{width: '100%', marginTop: 8}}>
+                            <ButtonDefault
+                              text="Ativar balança"
+                              onPress={() =>
+                                productionData.status_maquina == 1
+                                  ? initBalance()
+                                  : {}
+                              }
+                            />
+                          </Card>
+                        </>
                       )}
 
                   {/* {showBtnBalance && !setOrderReady() && (
@@ -1249,7 +1304,9 @@ const Producao: React.FC = ({route, navigation}) => {
                         paddingVertical: 0,
                       }}
                       onPress={() => statusMaquina()}>
-                      <BtnText>Maquina Ligada</BtnText>
+                      <BtnText>
+                        Maquina Ligada - {productionData.usuario_status_maquina}
+                      </BtnText>
                     </ContainerStatusMaquina>
                   ) : (
                     <ContainerStatusMaquina
@@ -1282,7 +1339,10 @@ const Producao: React.FC = ({route, navigation}) => {
                         paddingVertical: 0,
                       }}
                       onPress={() => statusProducao()}>
-                      <BtnText>Produção Ativa</BtnText>
+                      <BtnText>
+                        Produção Ativa -{' '}
+                        {productionData.usuario_status_producao}
+                      </BtnText>
                     </ContainerStatusMaquina>
                   ) : (
                     <ContainerStatusMaquina
@@ -1314,7 +1374,28 @@ const Producao: React.FC = ({route, navigation}) => {
                     />
                   </Card>
                 )} */}
+                <View
+                  style={{
+                    justifyContent: 'space-between',
+                    flex: 1,
+                    flexDirection: 'row',
 
+                    paddingHorizontal: 10,
+                    borderRadius: 5,
+                    paddingVertical: 5,
+                    backgroundColor: '#e9722c',
+                  }}>
+                  <Titulo
+                    style={{
+                      color: '#fff',
+                      width: '50%',
+                    }}>
+                    {userData?.first_name}
+                  </Titulo>
+                  <BtnConfirm onPress={() => clearStorage()}>
+                    <BtnConfirmText>SAIR</BtnConfirmText>
+                  </BtnConfirm>
+                </View>
                 {setOrderReady() && (
                   <Card>
                     <ButtonDefault
@@ -1327,29 +1408,25 @@ const Producao: React.FC = ({route, navigation}) => {
                 )}
 
                 {getAllMaterialStatus() && !setOrderReady() ? (
-                  <Card style={{marginVertical: 16}}>
-                    <ButtonDefault
-                      text="Indicar Matéria"
-                      onPress={() =>
-                        productionData.status_maquina == 1
-                          ? setVisible(true)
-                          : {}
-                      }
-                    />
+                  <Card style={{width: '100%', marginTop: 8, padding: 5}}>
+                    <ButtonDefault text="Indicar Matéria" onPress={() => {}} />
                   </Card>
                 ) : (
                   showBtnBalance &&
                   !setOrderReady() && (
-                    <Card style={{width: '100%', marginTop: 8}}>
-                      <ButtonDefault
-                        text="Ativar balança"
-                        onPress={() =>
-                          productionData.status_maquina == 1
-                            ? initBalance()
-                            : {}
-                        }
-                      />
-                    </Card>
+                    <>
+                      <Card style={{width: '100%', marginTop: 8, padding: 5}}>
+                        <ButtonDefault
+                          text="Ativar balança"
+                          styleB={{height: 40}}
+                          onPress={() =>
+                            productionData.status_maquina == 1
+                              ? initBalance()
+                              : {}
+                          }
+                        />
+                      </Card>
+                    </>
                   )
                 )}
               </TopRightContent>
@@ -1393,7 +1470,7 @@ const Producao: React.FC = ({route, navigation}) => {
                         renderItem={({item, index}) => (
                           <ItemListMaterial
                             blocked={!getAllMaterialStatus()}
-                            code={item.id}
+                            code={item.obj_id}
                             status={item.status_production}
                             handleTarugoRePrint={() =>
                               handleTarugoRePrint(item.id)
@@ -1561,12 +1638,7 @@ const Producao: React.FC = ({route, navigation}) => {
                 {/* Card amarelo */}
                 <VolumeCard>
                   <CardTotalText>Totais Fabricados:</CardTotalText>
-                  <RowWrapper>
-                    <ValueWeight>
-                      {'KG: '}
-                      {boxList.length > 0 ? getVolume(boxList) : 0} kg
-                    </ValueWeight>
-                  </RowWrapper>
+
                   <RowWrapper>
                     <ValueWeight>
                       {Number(
@@ -1588,7 +1660,7 @@ const Producao: React.FC = ({route, navigation}) => {
                               (product?.weight.box_weight /
                                 product?.weight.box_unit_weight),
                           ).toFixed(0)}{' '}
-                          caixa(s)
+                          Fardo(s)
                         </CardTotalHeight>
                       </View>
                     </RowWrapper>
@@ -1766,6 +1838,7 @@ const Producao: React.FC = ({route, navigation}) => {
                 backgroundColor: '#ffffff',
                 borderRadius: 10,
                 padding: 20,
+                height: '100%',
               }}>
               {productionData && productionData.status_maquina == 1 ? (
                 <>
@@ -1823,6 +1896,7 @@ const Producao: React.FC = ({route, navigation}) => {
                 backgroundColor: '#efb3b3',
                 borderRadius: 10,
                 padding: 20,
+                height: '100%',
               }}>
               {productionData && productionData.status_producao == 1 ? (
                 <>
@@ -1887,7 +1961,64 @@ const Producao: React.FC = ({route, navigation}) => {
             Number(prevWeightFloor) - Number(product?.weight?.box_unit_weight)
           }
         />
+        <ModalDefault
+          change={() => setVisibleModalWarningFloor(false)}
+          visible={visibleModalWarningFloor}
+          children={
+            <ContainerTab
+              style={{
+                backgroundColor: '#c33',
+                borderRadius: 10,
+                padding: 20,
+                height: '400',
+              }}>
+              {productionData && productionData.status_producao == 1 ? (
+                <>
+                  <FontAwesomeIcon
+                    icon={faWarning}
+                    size={120}
+                    style={{
+                      color: '#faaa48',
+                      position: 'absolute',
+                      left: 50,
+                      top: -40,
+                    }}
+                  />
+                  <Text style={{fontSize: 30, color: '#fff', marginTop: 70}}>
+                    PESO SALVO! Necessário armazenar o volume
+                  </Text>
 
+                  <ContainerStatusMaquina
+                    style={{backgroundColor: '#a43b3b', paddingVertical: 20}}
+                    onPress={() => setVisibleModalWarningFloor(false)}>
+                    <BtnText
+                      style={{
+                        fontSize: 20,
+                        justifyContent: 'center',
+                        color: '#fff',
+                      }}>
+                      Feito!
+                    </BtnText>
+                  </ContainerStatusMaquina>
+                </>
+              ) : (
+                <>
+                  <Text style={{fontSize: 15}}>
+                    Tem certeza que deseja ATIVAR a Produção?
+                  </Text>
+
+                  <ContainerStatusMaquina
+                    style={{paddingVertical: 20}}
+                    onPress={() => turnProducao(1)}>
+                    <BtnText style={{fontSize: 20, justifyContent: 'center'}}>
+                      Sim! ATIVAR a Produção
+                    </BtnText>
+                  </ContainerStatusMaquina>
+                </>
+              )}
+            </ContainerTab>
+          }
+        />
         {prinData.printList.length > 0 && (
           <SendPrint
             print={true}
@@ -1997,6 +2128,10 @@ const Main = styled.View`
   flex-direction: row;
   justify-content: space-between;
   padding: 16px;
+`;
+const CardTotalIcon = styled(FontAwesomeIcon)`
+  margin-left: auto;
+  color: ${({theme}) => theme.white};
 `;
 const ProductStatusTab = styled.View`
   background-color: ${({theme, status}) =>
@@ -2138,7 +2273,7 @@ const CardStorageWeightRow = styled.View`
   align-items: center;
   justify-content: space-between;
 `;
-const List = styled.View``;
+const List = styled.ScrollView``;
 const BotaoList = styled.TouchableOpacity`
   padding: 10px;
   border-color: ${({active}) => (active ? '#063' : '#ccc')};
@@ -2364,7 +2499,32 @@ const BalanceWaitingFloatLevel = styled.View`
   z-index: 1000;
   border-radius: 12px;
 `;
+const Titulo = styled.Text`
+  font-size: 25px;
+  color: #3f3f3e;
+  font-weight: bold;
+  width: auto;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  vertical-align: middle;
+`;
+const BtnConfirm = styled.TouchableOpacity`
+  border-radius: 15px;
+  padding: 5px 10px;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  vertical-align: middle;
+  background-color: #fff;
+  width: 50px;
+`;
 
+const BtnConfirmText = styled.Text`
+  color: #c33;
+  font-weight: bold;
+  font-size: 16px;
+`;
 const BalanceWaitingFloat = styled.View`
   width: 200px;
   height: 20px;

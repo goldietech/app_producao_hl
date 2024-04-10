@@ -48,7 +48,7 @@ const ModalFinish: React.FC<ModalConferenceTabletProps> = ({
           <View>
             <CardTotalText>Peso total da nota</CardTotalText>
             <CardTotalHeight>
-              {parseFloat(itemToModal.total)} kg
+              {parseFloat(itemToModal.volume)} kg
             </CardTotalHeight>
           </View>
           <CardTotalIcon icon={faWeightHanging} size={30} />
@@ -57,28 +57,28 @@ const ModalFinish: React.FC<ModalConferenceTabletProps> = ({
         <CardTotal>
           <View>
             <CardTotalText>Peso total conferido</CardTotalText>
-            <CardTotalHeight>{totalItensWeight} kg</CardTotalHeight>
+            <CardTotalHeight>{parseFloat(totalItensWeight)} kg</CardTotalHeight>
           </View>
           <CardTotalIcon icon={faWeightHanging} size={30} />
         </CardTotal>
       </RowWeight>
+      <RowWeight>
+        <CardTotal>
+          <View>
+            <CardTotalText>Quantidade de itens</CardTotalText>
+            <CardTotalHeight>{totalItens}</CardTotalHeight>
+          </View>
+          <CardTotalIcon icon={faWeightHanging} size={30} />
+        </CardTotal>
 
-      <RowQtd>
-        <Card>
-          <Label>Quantidade de volumes</Label>
-          <Value>{totalItensAdd}</Value>
-        </Card>
-
-        <Card>
-          <Label>Quantidade de itens</Label>
-          <Value>{totalItens}</Value>
-        </Card>
-
-        {/* <Card>
-          <Label>Valor da nota</Label>
-          <Value>R$ {totalMoney}</Value>
-        </Card> */}
-      </RowQtd>
+        <CardTotal>
+          <View>
+            <CardTotalText>Quantidade de volumes</CardTotalText>
+            <CardTotalHeight>{totalItensAdd}</CardTotalHeight>
+          </View>
+          <CardTotalIcon icon={faWeightHanging} size={30} />
+        </CardTotal>
+      </RowWeight>
 
       <RowBtns>
         <>
@@ -151,7 +151,7 @@ const RowWeight = styled.View`
 const CardTotal = styled.View`
   border-radius: 15px;
   width: ${Dimensions.get('screen').width < 520 ? '100%' : '48%'};
-  ${Dimensions.get('screen').width < 520 && `margin: 16px 0`};
+  ${Dimensions.get('screen').width < 520 && 'margin: 16px 0'};
   padding: 16px;
   background-color: ${({theme}) => theme.cardBackGround};
   flex-direction: row;
@@ -217,7 +217,7 @@ const BtnWrapper = styled.View`
   ${Dimensions.get('screen').width < 520 && 'width: 30%'}
 `;
 
-const ModalIndicator = styled(ActivityIndicator).attrs((props) => ({
+const ModalIndicator = styled(ActivityIndicator).attrs(props => ({
   color: props.theme.primary,
   size: 30,
 }))`

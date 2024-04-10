@@ -1,9 +1,9 @@
 import React from 'react';
-import { TouchableOpacity, View } from 'react-native';
+import {TouchableOpacity, View} from 'react-native';
 import styled from 'styled-components/native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
-import { FontsDefault } from '../styles/fonts';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faCheckCircle} from '@fortawesome/free-solid-svg-icons';
+import {FontsDefault} from '../styles/fonts';
 
 // import { Container } from './styles';
 interface ItemListMaterialProps {
@@ -21,10 +21,8 @@ const ItemListMaterial: React.FC<ItemListMaterialProps> = ({
   code,
   confirm,
   blocked,
-  handleTarugoRePrint
+  handleTarugoRePrint,
 }) => {
-
-  
   return (
     <>
       <Container
@@ -33,7 +31,7 @@ const ItemListMaterial: React.FC<ItemListMaterialProps> = ({
         onPress={confirm}>
         {status == 'production' && (
           <TabStatus option={status}>
-            <StatusText>Em uso</StatusText>
+            <StatusText>Em uso | ID: {code}</StatusText>
           </TabStatus>
         )}
 
@@ -47,8 +45,10 @@ const ItemListMaterial: React.FC<ItemListMaterialProps> = ({
           <>
             {title}
             {status != 'production' && status != 'done' ? (
-              <TitleCode>  ID: {code}</TitleCode>
-            ) : ''}
+              <TitleCode> ID: {code}</TitleCode>
+            ) : (
+              ''
+            )}
           </>
         </Title>
 
@@ -56,18 +56,15 @@ const ItemListMaterial: React.FC<ItemListMaterialProps> = ({
           (status == 'done' && <CodeText>{code}</CodeText>)}
 
         {status == 'done' && <IconChecked icon={faCheckCircle} size={30} />}
-
-
       </Container>
-      {
-        status == 'done' && (
-          <TabPressStatus style={{ width: 100, backgroundColor: '#c33' }} onPress={() => handleTarugoRePrint()}>
-            <StatusText style={{ color: '#fff' }}>Reimpressão</StatusText>
-          </TabPressStatus>
-        )
-      }
+      {status == 'done' && (
+        <TabPressStatus
+          style={{width: 100, backgroundColor: '#c33'}}
+          onPress={() => handleTarugoRePrint()}>
+          <StatusText style={{color: '#fff'}}>Reimpressão</StatusText>
+        </TabPressStatus>
+      )}
     </>
-
   );
 };
 
@@ -93,36 +90,36 @@ export const TabStatus = styled.View<StatusOptionsProps>`
   margin-right: 10px;
   border-radius: 25px;
   padding: 2px 6px;
-  background-color: ${({ theme, option }) =>
+  background-color: ${({theme, option}) =>
     option == 'production' ? theme.lightBlue : theme.lightGreen};
 `;
 
 export const StatusText = styled.Text`
   font-size: ${FontsDefault.small};
-  color: ${({ theme }) => theme.color};
+  color: ${({theme}) => theme.color};
 `;
 export const TitleCode = styled.Text`
   font-size: 18px;
   font-weight: bold;
-  color: ${({ theme }) => theme.color};
+  color: ${({theme}) => theme.color};
 `;
 
 export const Title = styled.Text`
   font-size: ${FontsDefault.small};
-  color: ${({ theme }) => theme.color};
+  color: ${({theme}) => theme.color};
   width: 60%;
 `;
 
 export const CodeText = styled.Text`
-  color: ${({ theme }) => theme.primary};
+  color: ${({theme}) => theme.primary};
   font-size: ${FontsDefault.small};
   margin-left: 16px;
 `;
 
-export const IconChecked = styled(FontAwesomeIcon).attrs((props) => ({
+export const IconChecked = styled(FontAwesomeIcon).attrs(props => ({
   color: props.theme.green,
 }))`
   margin-left: auto;
 `;
 
-export { ItemListMaterial };
+export {ItemListMaterial};

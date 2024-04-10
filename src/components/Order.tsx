@@ -1,10 +1,10 @@
 import React from 'react';
 import styled from 'styled-components/native';
-import { Dimensions, View, FlatList } from 'react-native';
-import { FontsDefault } from '../styles/fonts';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faPlus, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
-import { ItemListOrder } from './ItemListOrder';
+import {Dimensions, View, FlatList} from 'react-native';
+import {FontsDefault} from '../styles/fonts';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faPlus, faCheckCircle} from '@fortawesome/free-solid-svg-icons';
+import {ItemListOrder} from './ItemListOrder';
 import {
   ObjectProduct,
   ResponseOrder,
@@ -42,24 +42,10 @@ const Order: React.FC<OrderProp> = ({
         <View>
           <ProductTitle>{itemsData.obj_description}</ProductTitle>
           <ProductId>id: {itemsData.id}</ProductId>
-          <View>
-            <VolumeTag type="kg">
-              <VolumeTagText>{itemsData.obj_unit}</VolumeTagText>
-            </VolumeTag>
-            <VolumeQtd>{volume}</VolumeQtd>
-          </View>
         </View>
-
-
       </ProductArea>
 
       <Divider />
-
-      {productionMode && (
-        <BarProgressContainer>
-          <BarProgress percent={50} />
-        </BarProgressContainer>
-      )}
 
       {/* <FlatList
         data={itemsData.rawObjects}
@@ -117,7 +103,7 @@ type CardActiveProps = {
 };
 const Container = styled.TouchableOpacity<CardActiveProps>`
   box-shadow: 2px 2px 2px #dedede;
-  background-color: ${({ theme }) => theme.cardBackGround};
+  background-color: ${({theme}) => theme.cardBackGround};
   margin: 16px;
   border-radius: 15px;
   padding: 16px;
@@ -125,10 +111,10 @@ const Container = styled.TouchableOpacity<CardActiveProps>`
     ? `${Dimensions.get('screen').height / 2.28}px`
     : `${Dimensions.get('screen').height / 2.2}px`};
   border: 3px solid
-    ${({ theme, status }) =>
-    status == 'done'
-      ? theme.green
-      : status == 'production'
+    ${({theme, status}) =>
+      status == 'done'
+        ? theme.green
+        : status == 'production'
         ? theme.blue
         : theme.cardBackGround};
 `;
@@ -142,26 +128,26 @@ const ProductArea = styled.View`
 
 const ProductTitle = styled.Text`
   font-size: ${FontsDefault.large};
-  color: ${({ theme }) => theme.color};
-  font-family: ${({ theme }) => theme.fontSecondary};
+  color: ${({theme}) => theme.color};
+  font-family: ${({theme}) => theme.fontSecondary};
   font-weight: bold;
   margin-bottom: 5px;
 `;
 
 const ProductId = styled.Text`
-  color: ${({ theme }) => theme.color};
+  color: ${({theme}) => theme.color};
   font-size: 14px;
-  font-family: ${({ theme }) => theme.fontSecondary};
+  font-family: ${({theme}) => theme.fontSecondary};
 `;
 type TypeHeightProps = {
   type: 'frd' | 'pct';
 };
 const VolumeTag = styled.View<TypeHeightProps>`
-  background-color: ${(props) =>
+  background-color: ${props =>
     props.type == 'pct' ? props.theme.darkBlue : props.theme.blue};
   justify-content: center;
   align-items: center;
-  width:120px;
+  width: 120px;
   border-radius: 15px;
   padding: 5px 16px;
   margin-bottom: 5px;
@@ -169,20 +155,20 @@ const VolumeTag = styled.View<TypeHeightProps>`
 
 const VolumeTagText = styled.Text`
   font-size: ${FontsDefault.small};
-  color: ${({ theme }) => theme.background};
-  font-family: ${({ theme }) => theme.fontSecondary};
+  color: ${({theme}) => theme.background};
+  font-family: ${({theme}) => theme.fontSecondary};
 `;
 
 const VolumeQtd = styled.Text`
   font-size: ${FontsDefault.medium};
-  color: ${({ theme }) => theme.color};
-  font-family: ${({ theme }) => theme.fontSecondary};
+  color: ${({theme}) => theme.color};
+  font-family: ${({theme}) => theme.fontSecondary};
 `;
 
 const Divider = styled.View`
   height: 2px;
   width: 90%;
-  background-color: ${({ theme }) => theme.background};
+  background-color: ${({theme}) => theme.background};
   margin: 16px;
   align-self: center;
 `;
@@ -193,7 +179,7 @@ interface ProgressProps {
 const BarProgressContainer = styled.View`
   height: 12px;
   width: 100%;
-  background-color: ${({ theme }) => theme.background};
+  background-color: ${({theme}) => theme.background};
   margin: 16px;
   align-self: center;
   justify-content: center;
@@ -203,8 +189,8 @@ const BarProgressContainer = styled.View`
 
 const BarProgress = styled.View<ProgressProps>`
   height: 6px;
-  width: ${({ percent }) => `${percent}%`};
-  background-color: ${({ theme }) => theme.primary};
+  width: ${({percent}) => `${percent}%`};
+  background-color: ${({theme}) => theme.primary};
   border-radius: 30px;
 `;
 
@@ -213,7 +199,7 @@ const Footer = styled.View`
 `;
 
 const BtnAddOrder = styled.TouchableOpacity`
-  background-color: ${({ theme }) => theme.lightBlue};
+  background-color: ${({theme}) => theme.lightBlue};
   flex-direction: row;
   align-self: flex-end;
   align-items: center;
@@ -223,7 +209,7 @@ const BtnAddOrder = styled.TouchableOpacity`
 `;
 
 const BtnEndOrder = styled.TouchableOpacity`
-  background-color: ${({ theme }) => theme.red};
+  background-color: ${({theme}) => theme.red};
   flex-direction: row;
   align-items: center;
   justify-content: center;
@@ -232,13 +218,13 @@ const BtnEndOrder = styled.TouchableOpacity`
   border-radius: 15px;
 `;
 
-const IconPlus = styled(FontAwesomeIcon).attrs((props) => ({
+const IconPlus = styled(FontAwesomeIcon).attrs(props => ({
   color: props.theme.white,
 }))`
   margin-right: 16px;
 `;
 const BtnAddOrderText = styled.Text`
-  color: ${({ theme }) => theme.white};
+  color: ${({theme}) => theme.white};
   font-size: ${FontsDefault.medium};
 `;
 const Row = styled.View`
@@ -249,17 +235,17 @@ const Row = styled.View`
 
 const FinishedText = styled.Text`
   font-size: ${FontsDefault.small};
-  color: ${({ theme }) => theme.color};
+  color: ${({theme}) => theme.color};
 `;
 
 const FinishedLabel = styled.Text`
   font-size: ${FontsDefault.large};
-  color: ${({ theme }) => theme.color};
+  color: ${({theme}) => theme.color};
   font-weight: bold;
 `;
 const FinishedValue = styled.Text`
   font-size: ${FontsDefault.small};
-  color: ${({ theme }) => theme.color};
+  color: ${({theme}) => theme.color};
 `;
 
 const ActionsArea = styled.View`
@@ -273,10 +259,10 @@ const ActionBtn = styled.TouchableOpacity`
   margin: 0 8px;
 `;
 
-export const IconChecked = styled(FontAwesomeIcon).attrs((props) => ({
+export const IconChecked = styled(FontAwesomeIcon).attrs(props => ({
   color: props.theme.green,
 }))`
   margin-right: 10px;
 `;
 
-export { Order };
+export {Order};

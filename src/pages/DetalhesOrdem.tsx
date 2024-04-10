@@ -270,7 +270,11 @@ const DetalhesOrdem: React.FC = ({route, navigation}) => {
           <PeriodArea>
             <View>
               <PeriodLabel>Periodo</PeriodLabel>
-              <PeriodTime>8:40 Horas</PeriodTime>
+              <PeriodTime>
+                {Math.floor(order?.OrdersObject[0].minutos_producao / 60)}
+                {':'}
+                {Math.floor(order?.OrdersObject[0].minutos_producao % 60)} Horas
+              </PeriodTime>
             </View>
             <PeriodIcon icon={faClock} size={30} />
           </PeriodArea>
@@ -278,9 +282,9 @@ const DetalhesOrdem: React.FC = ({route, navigation}) => {
 
         <CardTotal>
           <View>
-            <CardTotalText>Total de volumes</CardTotalText>
+            <CardTotalText>Previsão</CardTotalText>
             <CardTotalHeight>
-              {getVolume(order?.OrdersObject).toString()} volumes{' '}
+              {order?.OrdersObject[0].total_caixas} fardos
             </CardTotalHeight>
           </View>
           <CardTotalIcon icon={faWeightHanging} size={30} />
