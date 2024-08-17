@@ -4,8 +4,10 @@ import {
   View,
   FlatList,
   ScrollView,
+  Platform,
   Dimensions,
   Alert,
+  PermissionsAndroid,
   ActivityIndicator,
 } from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -71,6 +73,52 @@ const Producao: React.FC = ({route, navigation}) => {
     });
     setUserData(user);
   };
+  const requestBluScanPermission = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+        {
+          title: 'Permissão necessária',
+          message:
+            'Libere escanear bluetooth, ' +
+            'assim podemos conectar com a balança.',
+          buttonNegative: 'Não',
+          buttonPositive: 'Permitir',
+        },
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        init();
+      } else {
+        Alert.alert('Acesso BluetoothScan negado!');
+        return false;
+      }
+    } catch (err) {
+      Alert.alert('Erro Bluetooth:'+ err);
+    }
+  };
+  const requestBluPermission = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+        {
+          title: 'Permissão necessária',
+          message:
+            'Libere acesso ao bluetooth, ' +
+            'assim podemos conectar com a balança.',
+          buttonNegative: 'Não',
+          buttonPositive: 'Permitir',
+        },
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+         requestBluScanPermission()
+      } else {
+        Alert.alert('Acesso Bluetooth negado!');
+        return false;
+      }
+    } catch (err) {
+      Alert.alert('Erro Bluetooth:'+ err);
+    }
+  };
   const [opcaoMaquina, setOpcaoMaquina] = useState(0);
   const [opcaoProducao, setOpcaoProducao] = useState(0);
   const [balanceActive, setBalanceActive] = useState(false);
@@ -133,6 +181,9 @@ const Producao: React.FC = ({route, navigation}) => {
       setVisibleModalBluetooth(true);
     }
   };
+  const continueGetListSaved = async () => {
+  
+  }
 
   useEffect(() => {
     getUser();
@@ -171,22 +222,29 @@ const Producao: React.FC = ({route, navigation}) => {
       setShowBtnBalance(true);
     }
 
-    const init = async () => {
-      let isActive = await BluetoothSerial.enable();
-      if (!isActive) {
-        await BluetoothSerial.requestEnable();
-      }
-      let list = await BluetoothSerial.list();
-      setDevices(list);
-    };
+
 
     // getListSaved();
-    init();
+    var version = Platform.Version;
+    if(version < 31){
+      init();
+    }else{
+    requestBluPermission();
+
+    }
     storageWeight();
     getBoxes(data);
     getFloorBoxFromProduct(data);
     return () => cancelInterval();
   }, []);
+  const init = async () => {
+    let isActive = await BluetoothSerial.enable();
+    if (!isActive) {
+      await BluetoothSerial.requestEnable();
+    }
+    let list = await BluetoothSerial.list();
+    setDevices(list);
+  };
   const storageWeight = async () => {
     let asyncWeight = await JSON.parse(
       await AsyncStorage.getItem('@user:weightorder' + productionData.id),
@@ -304,14 +362,14 @@ const Producao: React.FC = ({route, navigation}) => {
             let loopTimes = await JSON.parse(
               await AsyncStorage.getItem('@user:loopTimes'),
             );
-            if (Number(balanceNumber) == 0 && loopTimes <= 6) {
+            if (Number(balanceNumber) == 0 && loopTimes <= 7) {
               loopTimes += 1;
 
               await AsyncStorage.setItem(
                 '@user:loopTimes',
                 JSON.stringify(loopTimes),
               );
-            } else if (Number(balanceNumber) == 0 && loopTimes > 6) {
+            } else if (Number(balanceNumber) == 0 && loopTimes > 7) {
               await AsyncStorage.setItem(
                 '@user:afterSaveWeight',
                 JSON.stringify(false),
@@ -603,9 +661,26 @@ const Producao: React.FC = ({route, navigation}) => {
           weight: finalWeight.toString(),
           orderId: product?.order_id.toString(),
           objId: product?.id.toString(),
+          newVersion: 1,
           // sku: '45166454',
         },
       );
+      if(resAddBox.data.status == 'no'){
+        Alert.alert(
+          'Problemas ao fechar a caixa: '+resAddBox.data.notification_html,
+          '',
+          [
+            {
+              text: 'OK',
+              style: 'cancel',
+              onPress: () => {},
+            },
+           
+          ],
+          {cancelable: true},
+        );
+        return;
+      }
       context.updateSpecificObjOrder(resAddBox.data.createObj.orderObjectData);
 
       // if (true) {
@@ -1811,7 +1886,7 @@ const Producao: React.FC = ({route, navigation}) => {
         )}
 
         <ModalBoxFinished
-          change={() => setVisible(false)}
+          change={() => setVisibleModalBox(false)}
           visible={visibleModalBox}
           cancel={() => closeModalfinished()}
           confirm={() => boxCreate()}
